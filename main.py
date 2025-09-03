@@ -12,6 +12,17 @@ app_state: Dict[str, Any] = {
     'solution': {},
 }
 
+RULES = {
+    '': {'label': 'Blank (No Rule)', 'value_required': False},
+    '=': {'label': 'Equals (=)', 'value_required': False},
+    '≠': {'label': 'Not Equals (≠)', 'value_required': False},
+    '>': {'label': 'Greater Than (>)', 'value_required': True},
+    '<': {'label': 'Less Than (<)', 'value_required': True},
+    '∑': {'label': 'Sum of Pips (∑)', 'value_required': True},
+}
+
+RULE_OPTIONS = {key: value['label'] for key, value in RULES.items()}
+
 def get_random_color() -> str:
     #random hex color for painting in square
     return f'#{random.randint(0, 0xFFFFFF):06x}'
@@ -27,6 +38,7 @@ def add_region():
         }
         app_state['new_region_name'] = ''
         region_palette.refresh()
+        rule_definitions.refresh()
     elif not name:
         ui.notify("Region name cannot be empty.", type='warning')
     else:
@@ -34,6 +46,7 @@ def add_region():
 
 def set_active_region(region_id: str):
     app_state['active_region_id'] = region_id
+    region_palette.refresh() # Refresh to show which region is active
 
 def assign_cell_to_region(r: int, c: int):
     active_id = app_state['active_region_id']
@@ -87,6 +100,28 @@ def region_palette():
                 on_click=lambda _, r_id=region_id: set_active_region(r_id)
             ).style(button_style).classes(button_classes)
 
+@ui.refreshable
+def rule_definitions():
+    if not app_state['regions']:
+        ui.label("Add a region to define its rules.")
+        return
+
+    for region_id, data in app_state['regions'].items():
+        with ui.row().classes('w-full items-center gap-4 p-2 border-b'):
+            ui.label(f"Region '{region_id}':")
+            
+            visibility_state = {'visible': RULES.get(data['rule'], {}).get('value_required', False)}
+            
+            def on_rule_change(e, state=visibility_state):
+                 state['visible'] = RULES.get(e.value, {}).get('value_required', False)
+
+            # A single select element for the rule, with the on_change handler.
+            ui.select(options=RULE_OPTIONS, label='Rule', value=data['rule'], on_change=on_rule_change) \
+                .bind_value(data, 'rule').classes('w-48')
+
+            ui.number(label='Value').bind_value(data, 'value') \
+                .bind_visibility_from(visibility_state, 'visible')
+
 with ui.row():
     with ui.card():
         ui.label('NYT Pips Solver').classes('text-3xl font-bold')
@@ -107,9 +142,11 @@ with ui.row():
             region_palette()
 
         with ui.row().classes('w-full gap-4'):
-            with ui.card():
+            with ui.card().classes('w-1/2 p-2'): # Grid on the left
                 grid_container()
-
+            with ui.card().classes('w-1/2 p-4'): # Rules on the right
+                ui.label('Step 3: Define Region Rules').classes('text-xl font-semibold mb-2')
+                rule_definitions()
 
 
 ui.run()
