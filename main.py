@@ -205,17 +205,19 @@ with ui.row().classes('w-full justify-center'):
 
         with ui.card().classes('w-full p-4 mb-4'):
             ui.label('Step 1: Board Setup').classes('text-xl font-semibold mb-2')
-            with ui.row().classes('w-full'):
+            with ui.row().classes('w-full items-center justify-center gap-4'):
                 ui.number(
-                    'Board Size (N x N)', min=2, max=10, step=1
+                    'Board Size (N x N)', min=2, max=10, step=1,
+                    on_change=handle_board_size_change
                 ).bind_value(app_state, 'board_size')
                 ui.input('Dominoes (e.g., 1-2, 3-4)').bind_value(app_state, 'domino_input').classes('grow')
 
         with ui.card().classes('w-full p-4 mb-4'):
             ui.label('Step 2: Define & Assign Regions').classes('text-xl font-semibold mb-2')
-            with ui.row().classes('w-full'):
+            with ui.row().classes('w-full items-center gap-2 mb-4'):
                 ui.input('New Region Name').bind_value(app_state, 'new_region_name')
                 ui.button('Add Region', on_click=add_region)
+            ui.label('Region Palette (Click to select, then click grid to assign):').classes('text-sm text-gray-600 mb-2')
             region_palette()
 
         with ui.row().classes('w-full gap-4'):
