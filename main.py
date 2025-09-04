@@ -66,6 +66,15 @@ def assign_cell_to_region(r: int, c: int):
     grid_container.refresh()
     region_palette.refresh()
 
+def get_cell_style(r: int, c: int) -> str:
+    """Determines the background color and style of a cell based on its assigned region."""
+    region_id = app_state['cell_to_region'].get((r, c))
+    if region_id and region_id in app_state['regions']:
+        color = app_state['regions'][region_id]['color']
+        # Add a border if the region is active to show what you're painting with
+        border = 'border-4 border-blue-500' if app_state['active_region_id'] == region_id else 'border-2'
+        return f'background-color: {color};'
+    return ''
 
 @ui.refreshable
 def grid_container():
@@ -80,6 +89,7 @@ def grid_container():
                 if region_id and region_id in app_state['regions']:
                     color = app_state['regions'][region_id]['color']
                     card.style(f'background-color: {color}')
+                    
 
                 with card:
                     solution_val = app_state['solution'].get((r, c))
@@ -90,11 +100,11 @@ def grid_container():
 
 @ui.refreshable
 def region_palette():
-    with ui.row():
+    with ui.row().classes('w-full items-center gap-2'):
         for region_id, data in app_state['regions'].items():
             is_active = (region_id == app_state['active_region_id'])
             button_style = 'background-color: ' + data.get('color', '#ffffff')
-            button_classes = 'text-white font-bold ring-blue-500' if is_active else 'text-black'
+            button_classes = 'text-white font-bold ring-4 ring-blue-500' if is_active else 'text-black'
             ui.button(
                 region_id,
                 on_click=lambda _, r_id=region_id: set_active_region(r_id)
@@ -103,12 +113,12 @@ def region_palette():
 @ui.refreshable
 def rule_definitions():
     if not app_state['regions']:
-        ui.label("Add a region to define its rules.")
+        ui.label("Add a region to define its rules.").classes('text-gray-500')
         return
 
     for region_id, data in app_state['regions'].items():
         with ui.row().classes('w-full items-center gap-4 p-2 border-b'):
-            ui.label(f"Region '{region_id}':")
+            ui.label(f"Region '{region_id}':").classes('w-32 font-bold')
             
             visibility_state = {'visible': RULES.get(data['rule'], {}).get('value_required', False)}
             
@@ -122,9 +132,76 @@ def rule_definitions():
             ui.number(label='Value').bind_value(data, 'value') \
                 .bind_visibility_from(visibility_state, 'visible')
 
-with ui.row():
-    with ui.card():
-        ui.label('NYT Pips Solver').classes('text-3xl font-bold')
+@ui.refreshable
+def grid_container():
+    """The main grid display. Refreshes on cell assignment."""
+    board_size = int(app_state['board_size']) # Ensure board_size is an integer
+    with ui.grid(columns=board_size).classes('gap-1 p-4 mx-auto'):
+        for r in range(board_size):
+            for c in range(board_size):
+                style = get_cell_style(r, c)
+                card = ui.card().classes('w-20 h-20 flex justify-center items-center cursor-pointer transition-all duration-200').style(style)
+                card.on('click', lambda _, r=r, c=c: assign_cell_to_region(r, c))
+                with card:
+                    # Display the solved number when available
+                    solution_val = app_state['solution'].get((r, c))
+                    if solution_val is not None:
+                        ui.label(str(solution_val)).classes('text-3xl font-bold')
+                    else:
+                        ui.label(f'({r},{c})').classes('text-xs text-gray-400')
+
+def reset_board_state():
+    """Clears all region and cell data to allow for a new board size."""
+    app_state['regions'].clear()
+    app_state['cell_to_region'].clear()
+    app_state['active_region_id'] = None
+    app_state['solution'].clear()
+    region_palette.refresh()
+    rule_definitions.refresh()
+    grid_container.refresh()
+
+def handle_board_size_change():
+    reset_board_state()
+    grid_container.refresh()
+
+def handle_solve_click():
+    """Processes the final state and displays the collected data for verification."""
+    solution_output.clear()
+    app_state['solution'] = {}
+    grid_container.refresh()
+
+    # Parse dominoes from input string for validation
+    try:
+        domino_str = app_state['domino_input'].replace(' ', '')
+        if not domino_str:
+            ui.notify('Domino input cannot be empty.', type='negative')
+            return
+        domino_pairs = domino_str.split(',')
+        dominoes = [tuple(sorted(map(int, pair.split('-')))) for pair in domino_pairs]
+    except Exception:
+        ui.notify('Invalid domino format. Please use format like "1-2, 3-4".', type='negative')
+        return
+
+    ui.notify('Puzzle input processed successfully!', type='positive')
+
+    with solution_output:
+        ui.label('Processed Puzzle Input').classes('text-lg font-bold')
+        ui.label(f"Board Size: {app_state['board_size']}x{app_state['board_size']}")
+        ui.label(f"Dominoes: {dominoes}")
+        ui.label("Regions & Rules:")
+        for region_id, data in app_state['regions'].items():
+            final_region_data = {
+                'rule': data['rule'],
+                'value': data['value'],
+                'cells': sorted(data['cells'])
+            }
+            ui.label(f"  Region '{region_id}': {final_region_data}").classes('font-mono')
+
+
+# --- Main UI Layout ---
+with ui.row().classes('w-full justify-center'):
+    with ui.card().classes('w-full max-w-5xl m-4 p-6'):
+        ui.label('NYT Pips Solver').classes('text-3xl font-bold text-center mb-6')
 
         with ui.card().classes('w-full p-4 mb-4'):
             ui.label('Step 1: Board Setup').classes('text-xl font-semibold mb-2')
@@ -148,5 +225,12 @@ with ui.row():
                 ui.label('Step 3: Define Region Rules').classes('text-xl font-semibold mb-2')
                 rule_definitions()
 
+        # button to get output
+        ui.separator().classes('my-6')
+        ui.button('Process Puzzle Input', on_click=handle_solve_click).props('color=primary size=lg').classes('w-full')
+        solution_output = ui.column().classes('mt-4 p-4 bg-gray-100 rounded w-full')
+
+# Initial creation of the grid
+handle_board_size_change()
 
 ui.run()
