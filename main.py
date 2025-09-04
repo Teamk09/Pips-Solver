@@ -2,6 +2,7 @@ from nicegui import ui
 from typing import Dict, Any
 import random
 import numpy as np
+from solver import solve_puzzle
 
 app_state: Dict[str, Any] = {
     'board_size': 4,
@@ -166,12 +167,10 @@ def handle_board_size_change():
     grid_container.refresh()
 
 def handle_solve_click():
-    """Processes the final state and displays the collected data for verification."""
     solution_output.clear()
     app_state['solution'] = {}
     grid_container.refresh()
 
-    # Parse dominoes from input string for validation
     try:
         domino_str = app_state['domino_input'].replace(' ', '')
         if not domino_str:
@@ -180,43 +179,36 @@ def handle_solve_click():
         domino_pairs = domino_str.split(',')
         dominoes = [tuple(sorted(map(int, pair.split('-')))) for pair in domino_pairs]
     except Exception:
-        ui.notify('Invalid domino format. Please use format like "1-2, 3-4".', type='negative')
+        ui.notify('Invalid domino format. Please use "1-2, 3-4".', type='negative')
         return
 
-    ui.notify('Puzzle input processed successfully!', type='positive')
-
-    # make an empty matrix filled with x that we will update when we encounter rules
     board_size = int(app_state['board_size'])
-    matrix = np.full((board_size, board_size), "x", dtype=object)
-    
-    for region_id, data in app_state['regions'].items():
-        rule = data['rule']
-        value = data['value']
-        cells = data['cells']
-        
-        for r, c in cells:
-            if r < board_size and c < board_size:  # edge case handing
-                if rule == '':
-                    matrix[r, c] = "o"
-                elif rule == '=':
-                    matrix[r, c] = "=="
-                elif rule == '>':
-                    matrix[r, c] = f">{value}"
-                elif rule == '<':
-                    matrix[r, c] = f"<{value}"
-                elif rule == '∑':
-                    matrix[r, c] = f"+{value}"
-                elif rule == '≠':
-                    matrix[r, c] = "≠"
-    
+    if not app_state['cell_to_region']:
+        ui.notify('The board is empty. Please assign cells to regions.', type='negative')
+        return
+    active_cells = list(app_state['cell_to_region'].keys())
+
+    ui.notify('Solving', type='info')
+
+    solution_board = solve_puzzle(board_size, dominoes, app_state['regions'], active_cells)
+
+    if solution_board is not None:
+        ui.notify('Solution found!', type='positive')
+        for r in range(board_size):
+            for c in range(board_size):
+                if solution_board[r, c] != -2:
+                    app_state['solution'][(r, c)] = solution_board[r, c]
+        grid_container.refresh()
+    else:
+        ui.notify('No solution', type='negative')
+
     with solution_output:
-        ui.label('Processed Puzzle Input').classes('text-lg font-bold')
-        ui.label(f"Board Size: {app_state['board_size']}x{app_state['board_size']}")
-        ui.label(f"Dominoes: {dominoes}")
-        ui.label("Generated Matrix:").classes('mt-4 mb-2 font-bold')
-        
-        for row in matrix:
-            ui.label(f"[{', '.join(row)}]").classes('font-mono')
+        if solution_board is not None:
+            ui.label('Solved Board:').classes('text-lg font-bold')
+            for row in solution_board:
+                # replaces -2 with x to be easier to visually understand
+                display_row = [str(val) if val != -2 else 'x' for val in row]
+                ui.label(f"[{', '.join(display_row)}]").classes('font-mono')
 
 
 # --- Main UI Layout ---
