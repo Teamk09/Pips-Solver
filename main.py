@@ -136,7 +136,7 @@ def rule_definitions():
 def grid_container():
     """The main grid display. Refreshes on cell assignment."""
     board_size = int(app_state['board_size']) # Ensure board_size is an integer
-    with ui.grid(columns=board_size).classes('gap-1 p-4 mx-auto'):
+    with ui.grid(columns=board_size).classes('gap-2 p-6 mx-auto'):
         for r in range(board_size):
             for c in range(board_size):
                 style = get_cell_style(r, c)
@@ -221,7 +221,7 @@ with ui.row().classes('w-full justify-center'):
             region_palette()
 
         with ui.row().classes('w-full gap-4'):
-            with ui.card().classes('w-1/2 p-2'): # Grid on the left
+            with ui.card().classes('w-auto p-2'): # Grid on the left
                 grid_container()
             with ui.card().classes('w-1/2 p-4'): # Rules on the right
                 ui.label('Step 3: Define Region Rules').classes('text-xl font-semibold mb-2')
