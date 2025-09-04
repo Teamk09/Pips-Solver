@@ -1,6 +1,7 @@
 from nicegui import ui
 from typing import Dict, Any
 import random
+import numpy as np
 
 app_state: Dict[str, Any] = {
     'board_size': 4,
@@ -184,18 +185,38 @@ def handle_solve_click():
 
     ui.notify('Puzzle input processed successfully!', type='positive')
 
+    # make an empty matrix filled with x that we will update when we encounter rules
+    board_size = int(app_state['board_size'])
+    matrix = np.full((board_size, board_size), "x", dtype=object)
+    
+    for region_id, data in app_state['regions'].items():
+        rule = data['rule']
+        value = data['value']
+        cells = data['cells']
+        
+        for r, c in cells:
+            if r < board_size and c < board_size:  # edge case handing
+                if rule == '':
+                    matrix[r, c] = "o"
+                elif rule == '=':
+                    matrix[r, c] = "=="
+                elif rule == '>':
+                    matrix[r, c] = f">{value}"
+                elif rule == '<':
+                    matrix[r, c] = f"<{value}"
+                elif rule == '∑':
+                    matrix[r, c] = f"+{value}"
+                elif rule == '≠':
+                    matrix[r, c] = "≠"
+    
     with solution_output:
         ui.label('Processed Puzzle Input').classes('text-lg font-bold')
         ui.label(f"Board Size: {app_state['board_size']}x{app_state['board_size']}")
         ui.label(f"Dominoes: {dominoes}")
-        ui.label("Regions & Rules:")
-        for region_id, data in app_state['regions'].items():
-            final_region_data = {
-                'rule': data['rule'],
-                'value': data['value'],
-                'cells': sorted(data['cells'])
-            }
-            ui.label(f"  Region '{region_id}': {final_region_data}").classes('font-mono')
+        ui.label("Generated Matrix:").classes('mt-4 mb-2 font-bold')
+        
+        for row in matrix:
+            ui.label(f"[{', '.join(row)}]").classes('font-mono')
 
 
 # --- Main UI Layout ---
