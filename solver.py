@@ -32,7 +32,6 @@ def solve_puzzle(board_size: int, dominoes: List[Tuple[int, int]], regions: Dict
         return None
 
 def find_most_constrained_empty_cell(board: np.ndarray, regions: Dict[str, Any]) -> Tuple[int, int]:
-    """Finds an empty cell within the smallest unfilled region."""
     candidate_regions = []
     for data in regions.values():
         unfilled_cells = [cell for cell in data['cells'] if board[cell[0], cell[1]] == -1]

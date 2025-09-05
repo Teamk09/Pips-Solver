@@ -28,7 +28,6 @@ RULE_OPTIONS = {key: value['label'] for key, value in RULES.items()}
 
 #default hard puzzle because entering the same puzzle over and over again is annoying
 def load_official_hard_puzzle():
-    """Wipes the current state and loads the user's specific puzzle with the correct, verified data."""
     reset_board_state()
     app_state['board_size'] = 5
     app_state['domino_input'] = '1-4, 3-4, 5-3, 0-1, 5-1, 0-3, 0-5, 2-5, 4-0, 2-4'
