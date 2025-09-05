@@ -129,4 +129,3 @@ def backtrack(board: np.ndarray, dominoes: List[Tuple[int, int]], used_dominoes:
         used_dominoes[i] = False
 
     return False
-

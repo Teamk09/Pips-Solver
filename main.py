@@ -3,10 +3,9 @@ from nicegui import ui
 from typing import Dict, Any
 import random
 import asyncio
-# Make sure to import your solver function
 from solver import solve_puzzle
 
-# --- App State & Constants ---
+#keeps track of game state, constantly updated by refresh functions
 app_state: Dict[str, Any] = {
     'board_size': 5,
     'domino_input': '',
@@ -27,7 +26,7 @@ RULES = {
 }
 RULE_OPTIONS = {key: value['label'] for key, value in RULES.items()}
 
-# --- Default Puzzle Data ---
+#default hard puzzle because entering the same puzzle over and over again is annoying
 def load_official_hard_puzzle():
     """Wipes the current state and loads the user's specific puzzle with the correct, verified data."""
     reset_board_state()
@@ -54,8 +53,6 @@ def load_official_hard_puzzle():
         }
         for r, c in data['cells']:
             app_state['cell_to_region'][(r, c)] = region_id
-            
-    ui.notify("Official Hard Puzzle loaded and verified!", type='positive')
     
     region_palette.refresh()
     rule_definitions.refresh()
@@ -63,7 +60,6 @@ def load_official_hard_puzzle():
     board_size_input.value = app_state['board_size']
     domino_input_field.value = app_state['domino_input']
 
-# --- Core UI & Solver Logic ---
 def get_random_color():
     return f'#{random.randint(0, 0xFFFFFF):06x}'
 
@@ -132,9 +128,6 @@ async def handle_solve_click():
 
     ui.notify('Solver started... check the console for progress.', type='info')
 
-    # --- VERSION COMPATIBILITY FIX ---
-    # Instead of ui.run_in_executor, we use the standard asyncio event loop.
-    # This is the fundamental way to run a synchronous function in an async environment.
     loop = asyncio.get_running_loop()
     solution_board = await loop.run_in_executor(
         None, solve_puzzle, board_size, dominoes, app_state['regions'], active_cells
@@ -154,7 +147,6 @@ async def handle_solve_click():
                 display_row = [str(val) if val != -2 else 'x' for val in row]
                 ui.label(f"[{', '.join(display_row)}]").classes('font-mono')
 
-# --- @ui.refreshable components (Omitted for brevity as they are unchanged) ---
 @ui.refreshable
 def grid_container():
     board_size = int(app_state['board_size'])
@@ -180,6 +172,7 @@ def region_palette():
             button_style = 'background-color: ' + data.get('color', '#ffffff')
             button_classes = 'text-white font-bold ring-4 ring-blue-500' if is_active else 'text-black'
             ui.button(region_id, on_click=lambda _, r_id=region_id: set_active_region(r_id)).style(button_style).classes(button_classes)
+
 @ui.refreshable
 def rule_definitions():
     if not app_state['regions']:
@@ -192,7 +185,7 @@ def rule_definitions():
                 state['visible'] = RULES.get(e.value, {}).get('value_required', False)
             ui.select(options=RULE_OPTIONS, label='Rule', value=data['rule'], on_change=on_rule_change).bind_value(data, 'rule').classes('w-48')
             ui.number(label='Value').bind_value(data, 'value').bind_visibility_from(visibility_state, 'visible')
-# --- Main UI Layout ---
+
 with ui.row().classes('w-full justify-center'):
     with ui.card().classes('w-full max-w-5xl m-4 p-6'):
         ui.label('NYT Pips Solver').classes('text-3xl font-bold text-center mb-6')
