@@ -29,18 +29,14 @@ RULE_OPTIONS = {key: value['label'] for key, value in RULES.items()}
 #default hard puzzle because entering the same puzzle over and over again is annoying
 def load_official_hard_puzzle():
     reset_board_state()
-    app_state['board_size'] = 5
-    app_state['domino_input'] = '1-4, 3-4, 5-3, 0-1, 5-1, 0-3, 0-5, 2-5, 4-0, 2-4'
+    app_state['board_size'] = 4
+    app_state['domino_input'] = '4-6, 0-4, 1-5, 3-4'
     
     puzzle_data = {
-        '(24)': {'rule': '∑', 'value': 24, 'cells': [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3)]},
-        '(>1)':   {'rule': '>', 'value': 1,  'cells': [(0, 1)]},
-        '(0 first)':    {'rule': '∑', 'value': 0,  'cells': [(0, 2)]},
-        '(4)':  {'rule': '∑', 'value': 4,  'cells': [(2, 0), (3, 0), (4, 0)]},
-        '(= first)':    {'rule': '=', 'value': 0,  'cells': [(2, 1), (2, 2)]},
-        '(= second)':   {'rule': '=', 'value': 0,  'cells': [(3, 1), (3, 2), (3, 3)]},
-        '(0 second)':  {'rule': '∑', 'value': 0,  'cells': [(4, 1), (4, 2)]},
-        'Blank':       {'rule': '', 'value': 0,  'cells': [(0, 3), (2, 3), (4, 3)]},
+        '1': {'rule': '∑', 'value': 1, 'cells': [(0, 0)]},
+        '7':   {'rule': '∑', 'value': 7,  'cells': [(0, 2), (0, 3)]},
+        '4':    {'rule': '∑', 'value': 4,  'cells': [(2, 0)]},
+        'Not =':  {'rule': '≠', 'value': 0,  'cells': [(0, 1), (1, 0), (1, 1), (2, 1)]}
     }
 
     for region_id, data in puzzle_data.items():
@@ -193,7 +189,7 @@ with ui.row().classes('w-full justify-center'):
             with ui.row().classes('w-full items-center justify-between gap-4'):
                 board_size_input = ui.number('Board Size', min=2, max=10, step=1, on_change=handle_board_size_change).bind_value(app_state, 'board_size')
                 domino_input_field = ui.input('Dominoes').bind_value(app_state, 'domino_input').classes('grow')
-                ui.button('Load Official Hard Puzzle', on_click=load_official_hard_puzzle, icon='download').props('color=secondary')
+                ui.button('Load Easy Puzzle', on_click=load_official_hard_puzzle, icon='download').props('color=secondary')
         with ui.card().classes('w-full p-4 mb-4'):
             ui.label('Step 2: Define & Assign Regions').classes('text-xl font-semibold mb-2')
             with ui.row().classes('w-full items-center gap-2 mb-4'):
