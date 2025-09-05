@@ -34,13 +34,13 @@ def load_official_hard_puzzle():
     app_state['domino_input'] = '1-4, 3-4, 5-3, 0-1, 5-1, 0-3, 0-5, 2-5, 4-0, 2-4'
     
     puzzle_data = {
-        'Purple (24)': {'rule': '∑', 'value': 24, 'cells': [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3)]},
-        'Pink (>1)':   {'rule': '>', 'value': 1,  'cells': [(0, 1)]},
-        'Teal (0)':    {'rule': '∑', 'value': 0,  'cells': [(0, 2)]},
-        'Orange (4)':  {'rule': '∑', 'value': 4,  'cells': [(2, 0), (3, 0), (4, 0)]},
-        'Blue (=)':    {'rule': '=', 'value': 0,  'cells': [(2, 1), (2, 2)]},
-        'Green (=)':   {'rule': '=', 'value': 0,  'cells': [(3, 1), (3, 2), (3, 3)]},
-        'Violet (0)':  {'rule': '∑', 'value': 0,  'cells': [(4, 1), (4, 2)]},
+        '(24)': {'rule': '∑', 'value': 24, 'cells': [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3)]},
+        '(>1)':   {'rule': '>', 'value': 1,  'cells': [(0, 1)]},
+        '(0 first)':    {'rule': '∑', 'value': 0,  'cells': [(0, 2)]},
+        '(4)':  {'rule': '∑', 'value': 4,  'cells': [(2, 0), (3, 0), (4, 0)]},
+        '(= first)':    {'rule': '=', 'value': 0,  'cells': [(2, 1), (2, 2)]},
+        '(= second)':   {'rule': '=', 'value': 0,  'cells': [(3, 1), (3, 2), (3, 3)]},
+        '(0 second)':  {'rule': '∑', 'value': 0,  'cells': [(4, 1), (4, 2)]},
         'Blank':       {'rule': '', 'value': 0,  'cells': [(0, 3), (2, 3), (4, 3)]},
     }
 
